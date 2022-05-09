@@ -225,9 +225,13 @@ csv2_3 = "deaths_by_age_group.csv"
 
 CasesAge = read.csv(file=csv1_3)
 CasesAge = data.frame(CasesAge)
+CasesAge$Age.Group = as.character(CasesAge$Age.Group)
+CasesAge$Age.Group = factor(CasesAge$Age.Group, levels=unique(CasesAge$Age.Group))
 
 DeathsAge = read.csv(file=csv2_3)
 DeathsAge = data.frame(DeathsAge)
+DeathsAge$Age.Group = as.character(DeathsAge$Age.Group)
+DeathsAge$Age.Group = factor(DeathsAge$Age.Group, levels=unique(DeathsAge$Age.Group))
 
 
 plot1_3 = ggplot(CasesAge, aes(x = Age.Group, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Cases")
