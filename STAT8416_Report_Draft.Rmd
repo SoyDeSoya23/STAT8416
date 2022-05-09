@@ -1,6 +1,6 @@
 ---
 title: "COVID-19 Death Trends via Demographics"
-author: "Enzo Hamel, Jonny Quezada, Danielle Tran, Blake Zellmer"
+author: "Jonny Quezada, Danielle Tran, Blake Zellmer"
 date: March 31, 2022
 subtitle: "Introduction to Data Science" 
 output:
@@ -165,8 +165,9 @@ library(gridExtra)
 # type file.choose() into the R console to find your directory of the csv
 # will need to erase first two lines of original csv for code to work
 
-csv1 = "/Users/jonnyquezada/Desktop/Spring 2022/IntroDataSci/cases_by_race_ethnicity__all_age_groups.csv"
-csv2 = "/Users/jonnyquezada/Desktop/Spring 2022/IntroDataSci/deaths_by_race_ethnicity__all_age_groups.csv"
+csv1 = "cases_by_race_ethnicity__all_age_groups.csv"
+csv2 = "deaths_by_race_ethnicity__all_age_groups.csv"
+
 
 CasesRaceE = read.csv(file=csv1)
 CasesRaceE = data.frame(CasesRaceE)
@@ -192,8 +193,8 @@ library(gridExtra)
 # type file.choose() into the R console to find your directory of the csv
 # will need to erase first two lines of original csv for code to work
 
-csv1_2 = "/Users/jonnyquezada/Downloads/cases_by_sex__all_age_groups.csv"
-csv2_2 = "/Users/jonnyquezada/Downloads/deaths_by_sex__all_age_groups.csv"
+csv1_2 = "cases_by_sex__all_age_groups.csv"
+csv2_2 = "deaths_by_sex__all_age_groups.csv"
 
 CasesSex = read.csv(file=csv1_2)
 CasesSex = data.frame(CasesSex)
@@ -219,8 +220,8 @@ library(gridExtra)
 # type file.choose() into the R console to find your directory of the csv
 # will need to erase first two lines of original csv for code to work
 
-csv1_3 = "/Users/jonnyquezada/Downloads/cases_by_age_group.csv"
-csv2_3 = "/Users/jonnyquezada/Downloads/deaths_by_age_group.csv"
+csv1_3 = "cases_by_age_group.csv"
+csv2_3 = "deaths_by_age_group.csv"
 
 CasesAge = read.csv(file=csv1_3)
 CasesAge = data.frame(CasesAge)
