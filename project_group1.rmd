@@ -20,8 +20,13 @@ The topic of COVID still makes an impact in the United States today. When COVID 
 
 ```{r Read Data}
 #Reading in the data
-infection = read.csv("https://data.cdc.gov/api/views/3nnm-4jni/rows.csv?accessType=DOWNLOAD")
-vaccine = read.csv("https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD")
+#infection = read.csv("https://data.cdc.gov/api/views/3nnm-4jni/rows.csv?accessType=DOWNLOAD")
+#vaccine = read.csv("https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD")
+
+infection = read.csv("/Users/jonnyquezada/Desktop/Spring 2022/IntroDataSci/United_States_COVID-19_Community_Levels_by_County.csv")
+#infection = data.frame(infection)
+vaccine = read.csv("/Users/jonnyquezada/Desktop/Spring 2022/IntroDataSci/COVID-19_Vaccinations_in_the_United_States_County.csv")
+#vaccine = data.frame(vaccine)
 ```
 
 # 2. About the data
@@ -49,12 +54,14 @@ infection2 = infection %>%
           summarise(max = max(date_updated))
 idata = merge(infection, infection2, by.x = c("county_fips","date_updated"), by.y = c("county_fips", "max"))
 
-vdata$FIPS = as.integer(vdata$FIPS)
+#vdata$FIPS = as.integer(vdata$FIPS)
 
-df = merge(x=vdata, y=idata, by.x = c("FIPS"), by.y = c("county_fips")) %>%
-  select(FIPS, Recip_County, Recip_State, county_population, health_service_area:covid.19_community_level, Completeness_pct:Booster_Doses_Vax_Pct)
+df = merge(x=vdata, y=idata, by.x = c("FIPS"), by.y = c("county_fips")) 
+df = df %>% select(FIPS, Recip_County, Recip_State, county_population, health_service_area:covid.19_community_level, Completeness_pct:Booster_Doses_Vax_Pct)
 
 df = df %>% rename(fips = FIPS)
+
+df$fips = as.integer(df$fips)
 
 head(df)
 ```
@@ -114,7 +121,7 @@ The different demographics data was used to generate bar plots with cases and de
 library(ggplot2)
 library(gridExtra)
 # type file.choose() into the R console to find your directory of the csv
-# will need to erase first two lines of original csv for code to work
+# will need to erase first two lines of original csv for code to work if you are getting from website
 csv1 = "cases_by_race_ethnicity__all_age_groups.csv"
 csv2 = "deaths_by_race_ethnicity__all_age_groups.csv"
 CasesRaceE = read.csv(file=csv1)
@@ -132,7 +139,7 @@ Figure 3: This is a plot comparing and contrasting the cumulative percentage of 
 library(ggplot2)
 library(gridExtra)
 # type file.choose() into the R console to find your directory of the csv
-# will need to erase first two lines of original csv for code to work
+# will need to erase first two lines of original csv for code to work if you are getting from website
 csv1_3 = "cases_by_age_group.csv"
 csv2_3 = "deaths_by_age_group.csv"
 CasesAge = read.csv(file=csv1_3)
@@ -154,7 +161,7 @@ Figure 4: This is a plot comparing and contrasting the cumulative percentage of 
 library(ggplot2)
 library(gridExtra)
 # type file.choose() into the R console to find your directory of the csv
-# will need to erase first two lines of original csv for code to work
+# will need to erase first two lines of original csv for code to work if you are getting from website
 csv1_2 = "cases_by_sex__all_age_groups.csv"
 csv2_2 = "deaths_by_sex__all_age_groups.csv"
 CasesSex = read.csv(file=csv1_2)
