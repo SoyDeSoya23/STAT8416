@@ -89,8 +89,11 @@ Have certain demographics had worse outcomes?
 
 - Mask/No Mask data: We are unable to find the mask versus no mask data so we will not be studying that data. 
     
+# 2. Data
 
-**Cases map**: 
+# 3. Exploratory Data Analysis
+
+## 3.1 Map Data Product 
 
 - There are a quite a few of high spots across the United States. These pockets are located in ID, TX, AK, KY, LA. The county with the highest cases is Benewah County located in ID. The county with the second highest is Loving County located in TX. The county with the third highest is Nome Census Area located in AK. The other counties with hot spots are Wayne County in KY, Dillingham Census Area in AK, Comanche County in TX, Trigg County in KY, Caldwell Parish in LA, and Ochiltree County in TX.
 ```{r Read Data}
@@ -130,6 +133,8 @@ df = merge(x=vdata, y=idata, by.x = "FIPS", by.y = "county_fips") %>%
 df = df %>% rename(fips = FIPS)
 ```
 
+## 3.1.1 Current COVID Cases
+
 ```{r Examine Data1, message=FALSE, warning=FALSE}
 library(usmap)
 library(ggplot2)
@@ -141,7 +146,7 @@ plot_usmap(regions = "counties", data = df, values = "covid_cases_per_100k") +
   theme(panel.background = element_rect(color = "black"))
 ```
 
-**Booster Dose map**:
+## 3.1.2 Vaccination Series Complete
 
 - From the overall look of the map, the South has the lowest percentage of booster doses. The states with counties with the highest percentage of booster doses are in NY, CA, WA, NE, MN, NM, CO.
 ```{r Examine Data2, message=FALSE, warning=FALSE}
@@ -156,9 +161,12 @@ plot_usmap(regions = "counties", data = df, values = "Booster_Doses_Vax_Pct") +
 
 ```
 
-**Cases and Deaths by Race and Ethnicity**:
+# 3.2 Demographics
+The data used in the following three plots were allocated from the CDC's website, as mentioned. The specific CSV files used, which are all available on the website, contain only summary data adapted from a vastly large master data set. The aforementioned master data set contains over 70 million rows (taking up over 6 gigabytes of data) which led to the decision to solely analyze the summary data in the CSV files for the pure sake of conserving computational power and maintaining a workable code run-time. Additionally, each CSV file were slightly modified in order for the plot to work (specifically, the first two rows did not contain any pertiant information and did not contain the same number of columns as the other rows; some columns contained non-numerical values, such as "<0.1", where numerical values were necessary, in which case all such instances were rounded to the numerical value of 0.1). The following plots were also all created using the ggplot2 package.
 
-- This next plot describes and compares the percent of cases against the percent of deaths due to COVID in the US for various races and ethnicities. Most interestingly, these two plots share a similar distribution, with white non-hispanics earning the majority, and Native Hawaiian/Pacific Islander earning the lowest percentage.  
+## 3.2.1 Race and Ethnicity
+
+- This plot describes and compares the percentage of cases against the percentage of deaths due to COVID in the US for various races and ethnicities. Most interestingly, these two plots share a similar distribution, with white non-hispanics earning the majority, and Native Hawaiian/Pacific Islander earning the lowest percentage. Additionally, the Hispanic/Latino demographic has the largest disparity between the percentage of cases, at about 25 percent, compared to the percentage of deaths, which is at about 16 percent. When compared to all the other observed races/ethnicities, the percentage of cases and deaths almost share the same percentage. 
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(gridExtra)
@@ -176,16 +184,18 @@ DeathsRaceE = read.csv(file=csv2)
 DeathsRaceE = data.frame(DeathsRaceE)
 
 
-plot1 = ggplot(CasesRaceE, aes(x = Race.Ethnicity, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Race/Ethnicity") + scale_fill_continuous(name = "Percent of Cases")
+plot1 = ggplot(CasesRaceE, aes(x = Race.Ethnicity, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Race/Ethnicity") + scale_fill_continuous(name = "Percent of Cases") + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
 
-plot2 = ggplot(DeathsRaceE, aes(x = Race.Ethnicity, y = Percent.of.deaths, fill=Percent.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Race/Ethnicity") + scale_fill_continuous(name = "Percent of Deaths")
+plot2 = ggplot(DeathsRaceE, aes(x = Race.Ethnicity, y = Percent.of.deaths, fill=Percent.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Race/Ethnicity") + scale_fill_continuous(name = "Percent of Deaths") + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
 
 grid.arrange(plot1, plot2)
 ```
 
-**Cases and Deaths by Sex**:
+Figure 3.2.1: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between various races and ethnicities.
 
-- This next plot describes and compares the percent of cases against the percent of deaths due to COVID in the US for the demographic of sex. For the category of sex known as "other", the original dataset gave non-numerical value of <0.1. For the sake of cohesiveness in the plot, we rounded all such values to 0.1.
+## 3.2.2 Sex
+
+- This next plot describes and compares the percentage of cases against the percentage of deaths due to COVID in the US for the demographic of sex. For the category of sex described as "other", the original dataset gave non-numerical value of <0.1. For the sake of cohesiveness in the plot, such non-numerical value was rounded to 0.1 as mentioned. Those who identify as either male or female make up the majority while those who do not identify in either gender make up a statistically insignificant percentage. In the percentage of cases, women account for about 5 percent more than men. On the other hand, with regards to the percentage of deaths, men account for about 10 percent more than women. 
 
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
@@ -203,16 +213,18 @@ DeathsSex = read.csv(file=csv2_2)
 DeathsSex = data.frame(DeathsSex)
 
 
-plot1_2 = ggplot(CasesSex, aes(x = Sex, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Sex") + scale_fill_continuous(name = "Percent of Cases")
+plot1_2 = ggplot(CasesSex, aes(x = Sex, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Sex") + scale_fill_continuous(name = "Percent of Cases") + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
 
-plot2_2 = ggplot(DeathsSex, aes(x = Sex, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Sex") + scale_fill_continuous(name = "Percent of Deaths")
+plot2_2 = ggplot(DeathsSex, aes(x = Sex, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Sex") + scale_fill_continuous(name = "Percent of Deaths") + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
 
 grid.arrange(plot1_2, plot2_2)
 ```
 
-**Cases and Deaths by Age Groups**:
+Figure 3.2.2: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between males, females, and other gender identities.
 
-- This next plot describes and compares the percent of cases against the percent of deaths due to COVID in the US for various age groups. It should be noted that in the plot of percentage of deaths per age groups, the age groups of 5-11 years, 12-15 years, and 16-17 years all had values less than 0.1 percent in the original dataset. For the sake of cohesiveness in the plot, all such values have been rounded to 0.1.
+## 3.2.3 Age
+
+- This next plot describes and compares the percent of cases against the percent of deaths due to COVID in the US for various age groups. It should be noted that in the plot of percentage of deaths per age groups, the age groups of 5-11 years, 12-15 years, and 16-17 years all had values less than 0.1 percent in the original dataset. For the sake of cohesiveness in the plot, all such values have been rounded to 0.1 as previously mentioned. At a high level view, it appears that the age groups most susceptible to contracting COVID were the range of ages from 18 to 64 years old, the highest of which being from 18 to 29 years old at about 23 percent. With regards to percentages of death, that same age group of 18 to 29 years old actaully accounted for about 2 percent, which is a sharp contrast. The age range most susceptible to a fatality were the ages from 50 and above, with the highest death percentages landing in the age group of 85+ years old at about 28 percent.
 
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
@@ -234,13 +246,14 @@ DeathsAge$Age.Group = as.character(DeathsAge$Age.Group)
 DeathsAge$Age.Group = factor(DeathsAge$Age.Group, levels=unique(DeathsAge$Age.Group))
 
 
-plot1_3 = ggplot(CasesAge, aes(x = Age.Group, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Cases")
+plot1_3 = ggplot(CasesAge, aes(x = Age.Group, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Cases") + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
 
-plot2_3 = ggplot(DeathsAge, aes(x = Age.Group, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Deaths")
+plot2_3 = ggplot(DeathsAge, aes(x = Age.Group, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Deaths") + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
 
 grid.arrange(plot1_3, plot2_3)
 ```
 
+Figure 3.2.1: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between a large spectrum of age groups.
 
 
 
@@ -255,84 +268,6 @@ grid.arrange(plot1_3, plot2_3)
 
 
 
-
-
-```{r}
-library(jsonlite)
-library(ggplot2)
-library(RSocrata)
-
-# data_1 = jsonlite::fromJSON("https://data.cdc.gov/resource/n8mc-b4w4.json")
-#vaccine_data = read.socrata("https://data.cdc.gov/resource/3rge-nu2a.json")
-
-#vaccine_data = data.frame(vaccine_data)
-
-#vaccine_data
-
-#plot_vac = ggplot(vaccine_data, aes(x=month, y=crude_vax_ir)) + geom_bar(stat = "identity") #+ scale_y_discrete(guide = guide_axis(n.dodge=8))
-
-#plot_vac
-
-```
-
-
-
-
-```{r}
-library(jsonlite)
-library(ggplot2)
-library(RSocrata)
-
-# data_1 = jsonlite::fromJSON("https://data.cdc.gov/resource/n8mc-b4w4.json")
-#data_1 = read.socrata("https://data.cdc.gov/resource/n8mc-b4w4.json")
-
-#data_1 = data.frame(data_1)
-
-#data_1
-
-#plot_1 = ggplot(data_1, aes(case_positive_specimen)) + geom_bar(stat = "count") + coord_flip() + scale_y_discrete(guide = guide_axis(n.dodge=8)) + facet_wrap(~ethnicity)
-
-#plot_1
-
-```
-
-
-```{r}
-library(ggplot2)
-library(gridExtra)
-
-#csv_3 = "/Users/jonnyquezada/Downloads/COVID-19_Case_Surveillance_Public_Use_Data_with_Geography.csv"
-
-#CasesRaceE_2 = read.csv(file=csv_3)
-#CasesRaceE_2 = data.frame(CasesRaceE_2)
-
-#CasesRaceE_2
-
-#plot3 = ggplot(CasesRaceE_2, aes(x = Race.Ethnicity, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Race/Ethnicity")
-
-#plot3
-```
-
-```{r}
-#plot3 = ggplot(CasesRaceE_2, aes(x = Race.Ethnicity, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Race/Ethnicity")
-
-#plot3
-
-#plot_1 = ggplot(CasesRaceE_2, aes(death_yn)) + geom_bar(stat = "count") + coord_flip() + scale_y_discrete(guide = guide_axis(n.dodge=8))
-
-#plot_1
-```
-
-
-
-**Updated scheduled** (Clearly describes what has been done and what will be completed in the final report.)
-
-- April 3 - April 16:
-  - Research more and go in-depth with plots.
-- April 17 - April 30:
-  - Research more, go in-depth with plots, and finalize.
-- May 1 - May 13 (Final report & presentation Due: May 11):
-  - Finalize and present final project.
 
 
 
