@@ -1,0 +1,204 @@
+---
+title: "COVID-19 Death Trends via Demographics"
+author: "Jonny Quezada, Danielle Tran, Blake Zellmer"
+date: May 10, 2022
+subtitle: "Introduction to Data Science  \nUniversity of Nebraska at Omaha" 
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.align='center')
+```
+
+## Abstract
+With over 81 million cases to this day, COVID remains a part of life that is still impacting Americans daily [CDCTracker]. The dawn of the year 2020 brought about the rejuvenating birth of a new decade: a symbol of hope for a better future. However, unbeknownst to many, the specter of uncertainty loomed in the corner as the novel Coronavirus began its tour around the world in the later months of that same year. As a result, society, as we know it, instantly changed for the foreseeable future; what we considered normal in day-to-day life. In this project, we look into how current cases and the vaccination completion change by county in the United States. We also analyze COVID cases and deaths given a demographic such as race and ethnicity, age, and sex. This is done by creating data products with current cases, the vaccination series completion, and demographic trends. Two of the data products are map data products showing the current COVID cases by county and the other is showing the vaccination series completion by county. The three other data products are bar graphs showing cases and deaths given a particular demographic. The data products will help us understand COVID better and see if it is here to stay or go.
+
+# 1. Introduction
+The topic of COVID still makes an impact in the United States today. When COVID cases start to rise, Americans need to see and understand the patterns of cases and death trends. To better understand the intricacies involved in this ongoing pandemic, we have decided to dedicate our project to analyzing data regarding the cases of the virus across the US, taking a closer look at how the vaccination completion has helped diminish the cases of the virus, and how different demographics are impacted. This report will take a look at answering the questions; in the United States, which counties experience the highest rates of infectivity, is there a relationship between cases and vaccine rates, and do certain demographics have worse outcomes? By analyzing and answering the questions above, we will be able to see if COVID is going away or staying around for a while. The following report is divided into different parts. Section two will provide the data information and clean up. Section three will provide explanatory data analysis. Section four will sum up the analysis and provide a results section. Section five will wrap up the entire project with the conclusion.
+
+```{r Read Data}
+#Reading in the data
+infection = read.csv("https://data.cdc.gov/api/views/3nnm-4jni/rows.csv?accessType=DOWNLOAD")
+vaccine = read.csv("https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD")
+```
+
+# 2. About the data
+The data utilized in this project for data analysis can be found on the Centers for Disease Control and Prevention (CDC) website under COVID Data Tracker. This tracker provides the cases of COVID, vaccination rates, and cases and death trends via demographics for the United States. From the data tracker on the CDC website, the datasets were obtained to create map data products and bar graphs. In doing so, we are able to see if a particular trait causes a correlation with survival rates. 
+
+## 2.1 Preparing the data
+
+## 2.1.1 Infection and Vaccine Data
+We grab the county level infection and vaccine data from the CDC COVID Tracker website. This allows us to look at COVID infection and vaccine rates at any point in time from the beginning of the pandemic to present day. We ended up choosing to look at only the most recent data and get an idea of whether the pandemic is truly slowing down and what claims can still be made of it.
+```{r Clean Data}
+#Cleaning up the data, grabbing just the most recent numbers available
+#and only the columns we want to look at.
+library(dplyr)
+vaccine$Date = as.Date(vaccine$Date, "%m/%d/%Y")
+vaccine2 = vaccine %>%
+          arrange(Date) %>%
+          group_by(FIPS) %>%
+          summarise(max = max(Date))
+vdata = merge(vaccine, vaccine2, by.x = c("FIPS","Date"), by.y = c("FIPS","max")) %>% select(FIPS, Date:Administered_Dose1_Pop_Pct, Series_Complete_Yes, Series_Complete_Pop_Pct, Booster_Doses, Booster_Doses_Vax_Pct, Census2019)
+
+infection$date_updated = as.Date(infection$date_updated)
+infection2 = infection %>%
+          arrange(date_updated) %>%
+          group_by(county_fips) %>%
+          summarise(max = max(date_updated))
+idata = merge(infection, infection2, by.x = c("county_fips","date_updated"), by.y = c("county_fips", "max"))
+
+vdata$FIPS = as.integer(vdata$FIPS)
+
+df = merge(x=vdata, y=idata, by.x = c("FIPS"), by.y = c("county_fips")) %>%
+  select(FIPS, Recip_County, Recip_State, county_population, health_service_area:covid.19_community_level, Completeness_pct:Booster_Doses_Vax_Pct)
+
+df = df %>% rename(fips = FIPS)
+
+head(df)
+```
+Here we clean up the data we grabbed and combine it into a single dataframe. The first thing is making sure the date columns are date datatype and then arranging the data by the date column. From there we group the data at the county level using the county FIPS (Federal Information Processing Standards) codes column as a form of reliability rather than just the county names themselves on the chance they don't always match. After that we summarize the data and grab only where the max or most recent date occurs in the data, so that we can look at present day. (Please note, this does make our findings time sensitive, so it is possible findings will change is reproduced) Furthermore, we change the datatype of the FIPS column in the vaccine data to an integer so that it's the same as the infection data for joining them together. And then we merge the two datasets looking at present day into one, joining them together on the FIPS columns (specifically an inner/natural join). While merging them together, we also filter down to only the columns we want to potentially look at: fips, Recip_County, Recip_State, county_population, health_service_area, health_service_area_population, covid_inpatient_bed_utilization, covid_hospital_admissions_per_100k, covid_cases_per_100k, covid.19_community_level, Completeness_pct, Administered_Dose1_Recip, Administered_Dose1_Pop_Pct, Series_Complete_Yes, Series_Complete_Pop_Pct, Booster_Doses, Booster_Doses_Vax_Pct. Out of these columns, we primarily took a look at the "covid_cases_per_100k" and "Series_Complete_Pop_Pct" columns to get an idea of where COVID is still appearing mostly, and where vaccination rates are high.
+
+## 2.1.2 Demographics Data
+The data used in the following three plots were allocated from the CDC’s website, as mentioned. The specific CSV files used, which are all available on the website, contain only summary data adapted from a vastly large master data set. The aforementioned master data set contains over 70 million rows (taking up over six gigabytes of data) which led to the decision to solely analyze the summary data in the CSV files for the pure sake of conserving computational power and maintaining a workable code run-time. Additionally, each CSV file were slightly modified in order for the plot to work (specifically, the first two rows did not contain any pertiant information and did not contain the same number of columns as the other rows; some columns contained non-numerical values, such as “<0.1”, where numerical values were necessary, in which case all such instances were rounded to the numerical value of 0.1). The following plots were also all created using the ggplot2 package.
+
+# 3. Exploratory Data Analysis
+
+## 3.1 Data Products
+Two map data products were created to show how the cases and vaccination rate differed by county.
+
+## 3.1.1 Current COVID Cases by County
+```{r Examine Data}
+library(usmap)
+library(ggplot2)
+#Plot of covid cases by county
+plot_usmap(regions = "counties", data = df, values = "covid_cases_per_100k") +
+           scale_fill_continuous(low = "white", high = "red4") + 
+  labs(title = "Current COVID cases by Counties",
+       subtitle = "This shows what counties are experiencing high COVID cases.",
+       fill = "COVID Cases per 100k") + 
+  theme(panel.background = element_rect(color = "black"),
+        legend.position = "right",
+        legend.box.background = element_rect(color = "black"))
+```
+Figure 1: With the present day data we created a county level map that indicates which counties are currently experiencing high rates of COVID, shown by gradient scale from white to red, with red indicating higher rates of COVID. 
+
+## 3.1.2 Vaccination Series Complete by County
+```{r}
+#Plot of vaccines by county
+plot_usmap(regions = "counties", data = df, values = "Series_Complete_Pop_Pct") + 
+           scale_fill_continuous(low = "white", high = "darkblue") + 
+  labs(title = "Current Complete Vaccination Series by Counties",
+       subtitle = "This shows what counties have high percentages of vaccination series complete.",
+       fill = "Complete Vaccination Series Percentage") +
+  theme(panel.background = element_rect(color = "black"),
+        legend.position = "right",
+        legend.box.background = element_rect(color = "black"))
+```
+Figure 2: Again with the present day data, we created another county level map looking at the completion percentage of vaccination series (that is not including any boosters). 
+
+## 3.1.3 Correlation between COVID cases and Vaccination
+```{r}
+#Looking into correlation between covid cases and vaccination
+cor.test(df$covid_cases_per_100k, df$Series_Complete_Yes)
+cor.test(df$covid_cases_per_100k, df$Booster_Doses)
+```
+We ran some correlation tests against the COVID rates currently (May 9th, 2022) and two other variables, vaccination rates and booster rates.
+
+# 3.2 Demographics
+The different demographics data was used to generate bar plots with cases and death rate among the groups. The different demographics are race and ethnicity, age, and sex. 
+
+## 3.2.1 Cases and Deaths by Race and Ethnicity 
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+# type file.choose() into the R console to find your directory of the csv
+# will need to erase first two lines of original csv for code to work
+csv1 = "cases_by_race_ethnicity__all_age_groups.csv"
+csv2 = "deaths_by_race_ethnicity__all_age_groups.csv"
+CasesRaceE = read.csv(file=csv1)
+CasesRaceE = data.frame(CasesRaceE)
+DeathsRaceE = read.csv(file=csv2)
+DeathsRaceE = data.frame(DeathsRaceE)
+plot1 = ggplot(CasesRaceE, aes(x = Race.Ethnicity, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Race/Ethnicity") + scale_fill_continuous(name = "Percent of Cases")
+plot2 = ggplot(DeathsRaceE, aes(x = Race.Ethnicity, y = Percent.of.deaths, fill=Percent.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Race/Ethnicity") + scale_fill_continuous(name = "Percent of Deaths")
+grid.arrange(plot1, plot2)
+```
+Figure 3: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between various races and ethnicities. The color of the bar will present the percent of cases and death and the brighter the color the higher the percentage.
+
+## 3.2.2 Cases and Deaths by Age
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+# type file.choose() into the R console to find your directory of the csv
+# will need to erase first two lines of original csv for code to work
+csv1_3 = "cases_by_age_group.csv"
+csv2_3 = "deaths_by_age_group.csv"
+CasesAge = read.csv(file=csv1_3)
+CasesAge = data.frame(CasesAge)
+CasesAge$Age.Group = as.character(CasesAge$Age.Group)
+CasesAge$Age.Group = factor(CasesAge$Age.Group, levels=unique(CasesAge$Age.Group))
+DeathsAge = read.csv(file=csv2_3)
+DeathsAge = data.frame(DeathsAge)
+DeathsAge$Age.Group = as.character(DeathsAge$Age.Group)
+DeathsAge$Age.Group = factor(DeathsAge$Age.Group, levels=unique(DeathsAge$Age.Group))
+plot1_3 = ggplot(CasesAge, aes(x = Age.Group, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Cases")
+plot2_3 = ggplot(DeathsAge, aes(x = Age.Group, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Age Group") + scale_fill_continuous(name = "Percent of Deaths")
+grid.arrange(plot1_3, plot2_3)
+```
+Figure 4: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between a large spectrum of age groups. The color of the bar will present the percent of cases and deaths and the brighter the color the higher the percentage. 
+
+## 3.2.3 Cases and Deaths by Sex
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+# type file.choose() into the R console to find your directory of the csv
+# will need to erase first two lines of original csv for code to work
+csv1_2 = "cases_by_sex__all_age_groups.csv"
+csv2_2 = "deaths_by_sex__all_age_groups.csv"
+CasesSex = read.csv(file=csv1_2)
+CasesSex = data.frame(CasesSex)
+DeathsSex = read.csv(file=csv2_2)
+DeathsSex = data.frame(DeathsSex)
+plot1_2 = ggplot(CasesSex, aes(x = Sex, y = Percent.of.cases, fill=Percent.of.cases)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Cases") + xlab("Sex") + scale_fill_continuous(name = "Percent of Cases")
+plot2_2 = ggplot(DeathsSex, aes(x = Sex, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Sex") + scale_fill_continuous(name = "Percent of Deaths")
+grid.arrange(plot1_2, plot2_2)
+```
+Figure 5: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between males, females, and other gender identitiesThe color of the bar will present the percent of cases and deaths and the brighter the color the higher the percentage.
+
+# 4. Results
+
+## 4.1 Map Data Products Results
+
+## 4.1.1 Current COVID Cases by County Results
+At present day (May 9th, 2022) we can see from Figure 1 that Loving County in western Texas has the highest rate of COVID at 2367 cases per 100k people. Beyond that, we can see that Alaska as a whole is experiencing some high rates at the moment, and the Northeastern US as well. Overall, it does help show that COVID is not apparent across the entire US anymore, but there are still areas where it occurs in high rates, so it is not entirely gone or appearing to leave soon.
+
+## 4.1.2 Vaccination Series Complete by County Results
+For Figure 2, we went with the completion percentage of vaccination series instead of the booster data because the booster data gives its percentage based off the number of completed vaccination series and not the population, thus looking at the vaccination series is a better, true representation of the population percentage that has been vaccinated at least. With Figure 2, we are able to see that it is mostly the coasts and some scattered areas in the Midwest or Western US that have heavily vaccinated populations. And if you recall from Figure 1 that Loving County in western Texas had the highest current COVID rate, we see here in Figure 2 it is among the populations with lower vaccination rates. But it is a little surprising potentially to see Alaska is fairly well vaccinated, but as mentioned earlier is seen currently to be having semi-high COVID rates. All in all, Figure 2 helps us see that much of the inner US is not super well vaccinated, however there are many areas along the coast and some select inner US areas that have vaccinated a large percentage of their population.
+
+## 4.1.3 Correlation between COVID cases and vaccination and booster rates. 
+Both correlation tests show a positive correlation exists between the different pairings of COVID rates with the other two, which is not what would be expected, but they are low correlations around 0.10. So, although correlation does appear to exist between current day COVID rates and both vaccination and booster rates, they are both on the low end. But again, the fact that these correlations are positive and not negative is somewhat surprising, seeing as though one would think higher vaccination and booster rates would correlate with lower COVID rates, but according to current day COVID rates, that is not true. If one was to look at the data over time instead to get a more clear look, there is potential that we would see a negative correlation. Again though, we looked at the data only for the most current day to get a better idea of where COVID still stands at this exact moment.
+
+## 4.2 Demographic Results
+
+## 4.2.1 Race and Ethnicity Results
+In figure 3, it describes and compares the percentage of cases against the percentage of deaths due to COVID in the US for various races and ethnicities. Most interestingly, these two plots share a similar distribution, with White Non-Hispanics earning the majority, and Native Hawaiian/Pacific Islander
+earning the lowest percentage. Additionally, the Hispanic/Latino demographic has the largest disparity between the percentage of cases, at about 25 percent, compared to the percentage of deaths, which is at about 16 percent. When compared to all the other observed races and ethnicity, the percentage of cases and deaths almost share the same percentage.
+
+## 4.2.2 Age Results
+Figure 4 describes and compares the percent of cases against the percent of deaths due to COVID in the US for various age groups. It should be noted that in the plot of percentage of deaths per age groups, the age groups of 5-11 years, 12-15 years, and 16-17 years all had values less than 0.1 percent in the original dataset. For the sake of cohesiveness in the plot, all such values have been rounded to 0.1 as previously mentioned. At a high level view, it appears that the age groups most susceptible to contracting COVID were the range of ages from 18 to 64 years old, the highest of which being from 18
+to 29 years old at about 23 percent. With regards to percentages of death, that same age group of 18 to 29 years old actaully accounted for about 2 percent, which is a sharp contrast. The age range most susceptible to a fatality were the ages from 50 and above, with the highest death percentages landing in the age group of 85+ years old at about 28 percent.
+
+## 4.2.3 Sex Results
+Figure 5 describes and compares the percentage of cases against the percentage of deaths due to COVID in the US for the demographic of sex. For the category of sex described as “other”, the original dataset gave non-numerical value of <0.1. For the sake of cohesiveness in the plot, such non-numerical
+value was rounded to 0.1 as mentioned. Those who identify as either male or female make up the majority while those who do not identify in either gender make up a statistically insignificant percentage. In the percentage of cases, women account for about 5 percent more than men. On the other hand, with regards to the percentage of deaths, men account for about 10 percent more than women.
+
+# 5. Conclusion
+In this project, we wanted to see if COVID was still hanging around. After data analysis, we conclude that COVID-19 is still making an impact on today's society. However, with the constant updates on data, society can explore pattern analysis to lessen the chance of COVID. After analyzing the case and vaccine data along with a correlation test, we saw little to no correlation. With there being little to no correlation, an interesting discovery was made given the two map data products, we saw that the highest county of infectivity, Loving County in Texas, had a really low percentage of vaccination. With the demographic data of race and ethnicity, sex, and age, we can conclude that one particular group was more likely to die. In the race and ethnicity data, the graphs are quite similar between cases and deaths, but White Non-Hispanics were more likely to catch and die from COVID. In the sex data, the graphs were the opposite where males are less likely to catch COVID, but more likely to die from COVID. Finally, in the age data, the graphs were pretty different 65+ had the lowest percentage of cases where they had the highest percentage of death. Since COVID still makes an impact today, we all need to take a look and understand this analysis to help lessen COVID in the future. As of COVID right now, we still need to protect ourselves.
+
+# Reference
+
+[1] CDC, *COVID-19 Integrated County View*, https://covid.cdc.gov/covid-data-tracker/#county-view?list_select_state=all_states&list_select_county=all_counties&data-type=CommunityLevels, 2022
+
+[2] CDC, *Demographic Trends of COVID-19 cases and deaths in the US reported to CDC*, https://covid.cdc.gov/covid-data-tracker/#demographics, 2022
