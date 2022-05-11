@@ -21,14 +21,9 @@ The topic of COVID still makes an impact in the United States today. When COVID 
 ```{r Read Data}
 library(RCurl)
 #Reading in the data
+#IF WANTING TO REPRODUCE OUR RESULTS, DO NOT RUN THIS BLOCK OF CODE
 infection = read.csv(text=getURL("https://data.cdc.gov/api/views/3nnm-4jni/rows.csv?accessType=DOWNLOAD"))
 vaccine = read.csv(text=getURL("https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD"))
-
-#infection = read.socrata("https://data.cdc.gov/resource/3nnm-4jni.json")
-#vaccine = read.socrata("https://data.cdc.gov/resource/8xkx-amqh.json")
-
-#infection = data.frame(infection)
-#vaccine = data.frame(vaccine)
 ```
 
 # 2. About the data
@@ -41,6 +36,7 @@ We grab the county level infection and vaccine data from the CDC COVID Tracker w
 ```{r Clean Data, warning=FALSE, message=FALSE}
 #Cleaning up the data, grabbing just the most recent numbers available
 #and only the columns we want to look at.
+#IF WANTING TO REPRODUCE OUR RESULTS, ONLY RUN LINE 70 FROM THIS CHUNK
 library(dplyr)
 vaccine$Date = as.Date(vaccine$Date, "%m/%d/%Y")
 vaccine2 = vaccine %>%
@@ -64,6 +60,8 @@ df = df %>% select(FIPS, Recip_County, Recip_State, county_population, health_se
 df = df %>% rename(fips = FIPS)
 
 df$fips = as.integer(df$fips)
+
+df = read.csv("infection_and_vac_data.csv")
 ```
 Here we clean up the data we grabbed and combine it into a single dataframe. The first thing is making sure the date columns are date datatype and then arranging the data by the date column. From there we group the data at the county level using the county FIPS (Federal Information Processing Standards) codes column as a form of reliability rather than just the county names themselves on the chance they don't always match. After that we summarize the data and grab only where the max or most recent date occurs in the data, so that we can look at present day. (Please note, this does make our findings time sensitive, so it is possible findings will change is reproduced) Furthermore, we change the datatype of the FIPS column in the vaccine data to an integer so that it's the same as the infection data for joining them together. And then we merge the two datasets looking at present day into one, joining them together on the FIPS columns (specifically an inner/natural join). While merging them together, we also filter down to only the columns we want to potentially look at: fips, Recip_County, Recip_State, county_population, health_service_area, health_service_area_population, covid_inpatient_bed_utilization, covid_hospital_admissions_per_100k, covid_cases_per_100k, covid.19_community_level, Completeness_pct, Administered_Dose1_Recip, Administered_Dose1_Pop_Pct, Series_Complete_Yes, Series_Complete_Pop_Pct, Booster_Doses, Booster_Doses_Vax_Pct. Out of these columns, we primarily took a look at the "covid_cases_per_100k" and "Series_Complete_Pop_Pct" columns to get an idea of where COVID is still appearing mostly, and where vaccination rates are high.
 
