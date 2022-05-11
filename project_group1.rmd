@@ -38,7 +38,7 @@ The data utilized in this project for data analysis can be found on the Centers 
 
 ## 2.1.1 Infection and Vaccine Data
 We grab the county level infection and vaccine data from the CDC COVID Tracker website. This allows us to look at COVID infection and vaccine rates at any point in time from the beginning of the pandemic to present day. We ended up choosing to look at only the most recent data and get an idea of whether the pandemic is truly slowing down and what claims can still be made of it.
-```{r Clean Data}
+```{r Clean Data, warning=FALSE, message=FALSE}
 #Cleaning up the data, grabbing just the most recent numbers available
 #and only the columns we want to look at.
 library(dplyr)
@@ -172,7 +172,7 @@ plot1_2 = ggplot(CasesSex, aes(x = Sex, y = Percent.of.cases, fill=Percent.of.ca
 plot2_2 = ggplot(DeathsSex, aes(x = Sex, y = Percentage.of.deaths, fill=Percentage.of.deaths)) + geom_bar(stat = "identity") + coord_flip() + ylab("Percent of Deaths") + xlab("Sex") + scale_fill_continuous(name = "Percent of Deaths")
 grid.arrange(plot1_2, plot2_2)
 ```
-Figure 5: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between males, females, and other gender identitiesThe color of the bar will present the percent of cases and deaths and the brighter the color the higher the percentage.
+Figure 5: This is a plot comparing and contrasting the cumulative percentage of cases and deaths between males, females, and other gender identities. The color of the bar will present the percent of cases and deaths and the brighter the color the higher the percentage.
 
 # 4. Results
 
