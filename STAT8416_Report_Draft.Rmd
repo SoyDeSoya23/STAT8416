@@ -128,7 +128,7 @@ infection2 = infection %>%
 idata = merge(infection, infection2, by.x = c("county_fips","date_updated"), by.y = c("county_fips", "max"))
 
 df = merge(x=vdata, y=idata, by.x = "FIPS", by.y = "county_fips") %>%
-  select(FIPS, Recip_County, Recip_State, total_population, health_service_area:covid.19_community_level, Completeness_pct:Booster_Doses_Vax_Pct)
+  select(FIPS, Recip_County, Recip_State, county_population, health_service_area:covid.19_community_level, Completeness_pct:Booster_Doses_Vax_Pct)
 
 df = df %>% rename(fips = FIPS)
 ```
