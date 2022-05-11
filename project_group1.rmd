@@ -1,5 +1,5 @@
 ---
-title: "COVID-19 Death Trends via Demographics"
+title: "Present Day COVID Trends"
 author: "Jonny Quezada, Danielle Tran, Blake Zellmer"
 date: May 10, 2022
 subtitle: "Introduction to Data Science  \nUniversity of Nebraska at Omaha" 
@@ -19,13 +19,15 @@ With over 81 million cases to this day, COVID remains a part of life that is sti
 The topic of COVID still makes an impact in the United States today. When COVID cases start to rise, Americans need to see and understand the patterns of cases and death trends. To better understand the intricacies involved in this ongoing pandemic, we have decided to dedicate our project to analyzing data regarding the cases of the virus across the US, taking a closer look at how the vaccination completion has helped diminish the cases of the virus, and how different demographics are impacted. This report will take a look at answering the questions; in the United States, which counties experience the highest rates of infectivity, is there a relationship between cases and vaccine rates, and do certain demographics have worse outcomes? By analyzing and answering the questions above, we will be able to see if COVID is going away or staying around for a while. The following report is divided into different parts. Section two will provide the data information and clean up. Section three will provide explanatory data analysis. Section four will sum up the analysis and provide a results section. Section five will wrap up the entire project with the conclusion.
 
 ```{r Read Data}
+library(RCurl)
 #Reading in the data
-#infection = read.csv("https://data.cdc.gov/api/views/3nnm-4jni/rows.csv?accessType=DOWNLOAD")
-#vaccine = read.csv("https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD")
+infection = read.csv(text=getURL("https://data.cdc.gov/api/views/3nnm-4jni/rows.csv?accessType=DOWNLOAD"))
+vaccine = read.csv(text=getURL("https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD"))
 
-infection = read.csv("/Users/jonnyquezada/Desktop/Spring 2022/IntroDataSci/United_States_COVID-19_Community_Levels_by_County.csv")
+#infection = read.socrata("https://data.cdc.gov/resource/3nnm-4jni.json")
+#vaccine = read.socrata("https://data.cdc.gov/resource/8xkx-amqh.json")
+
 #infection = data.frame(infection)
-vaccine = read.csv("/Users/jonnyquezada/Desktop/Spring 2022/IntroDataSci/COVID-19_Vaccinations_in_the_United_States_County.csv")
 #vaccine = data.frame(vaccine)
 ```
 
@@ -54,16 +56,17 @@ infection2 = infection %>%
           summarise(max = max(date_updated))
 idata = merge(infection, infection2, by.x = c("county_fips","date_updated"), by.y = c("county_fips", "max"))
 
-#vdata$FIPS = as.integer(vdata$FIPS)
+vdata$FIPS = as.integer(vdata$FIPS)
 
-df = merge(x=vdata, y=idata, by.x = c("FIPS"), by.y = c("county_fips")) 
+df = merge(x=vdata, y=idata, by.x = c("FIPS"), by.y = c("county_fips"))
+head(df)
 df = df %>% select(FIPS, Recip_County, Recip_State, county_population, health_service_area:covid.19_community_level, Completeness_pct:Booster_Doses_Vax_Pct)
 
 df = df %>% rename(fips = FIPS)
 
 df$fips = as.integer(df$fips)
 
-head(df)
+# head(df)
 ```
 Here we clean up the data we grabbed and combine it into a single dataframe. The first thing is making sure the date columns are date datatype and then arranging the data by the date column. From there we group the data at the county level using the county FIPS (Federal Information Processing Standards) codes column as a form of reliability rather than just the county names themselves on the chance they don't always match. After that we summarize the data and grab only where the max or most recent date occurs in the data, so that we can look at present day. (Please note, this does make our findings time sensitive, so it is possible findings will change is reproduced) Furthermore, we change the datatype of the FIPS column in the vaccine data to an integer so that it's the same as the infection data for joining them together. And then we merge the two datasets looking at present day into one, joining them together on the FIPS columns (specifically an inner/natural join). While merging them together, we also filter down to only the columns we want to potentially look at: fips, Recip_County, Recip_State, county_population, health_service_area, health_service_area_population, covid_inpatient_bed_utilization, covid_hospital_admissions_per_100k, covid_cases_per_100k, covid.19_community_level, Completeness_pct, Administered_Dose1_Recip, Administered_Dose1_Pop_Pct, Series_Complete_Yes, Series_Complete_Pop_Pct, Booster_Doses, Booster_Doses_Vax_Pct. Out of these columns, we primarily took a look at the "covid_cases_per_100k" and "Series_Complete_Pop_Pct" columns to get an idea of where COVID is still appearing mostly, and where vaccination rates are high.
 
